@@ -1,0 +1,59 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: library-management
+  datasource:
+    url: jdbc:mysql://localhost:3306/library_management?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=True
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show-sql: true
+
+
+
+security:
+  jwt:
+    secret: ${JWT_TOKEN}
+    issuer-uri: "http://localhost:9091/oauth/token" # Replace with your actual issuer URI
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+    com:
+      example:
+        practiceproject:
+          feignconfig:
+            NotificationClient: DEBUG
+
+
+app:
+  encryption:
+    key: ${ENCRYPTION_KEY}
+  dbencryption:
+      key: ${DBENCRYPTION_KEY}
+  base-url: /app/librarymanagement
+  notifications:
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID}
+      service-sid: ${TWILIO_SERVICE_SID}
+      auth-token: ${TWILIO_AUTH_TOKEN}
+    baseUrl: https://verify.twilio.com/v2/Services
+    sendOtp:
+      url: /{serviceSid}/Verifications
+    verifyOtp:
+      url: /{serviceSid}/VerificationCheck
+  user:
+    create-endpoint: /createUser
+    sendOtp: /sendOtp
+    verifyOtp: /verifyOtp
