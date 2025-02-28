@@ -1,19 +1,26 @@
 package com.example.practiceproject.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -30,25 +37,19 @@ public class SecurityConfig
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/app/librarymanagement/**").authenticated()
-                        .anyRequest().permitAll()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.decoder(jwtDecoder()))
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.err.println("Authentication failed: " + authException.getMessage());
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
-                        })
-                );
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(oauth2 -> oauth2
+                .requestMatchers("/app/librarymanagement/**").authenticated()
+                .anyRequest().permitAll())
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder()))
+                .authenticationEntryPoint(this::handleAuthenticationFailure))
+            .exceptionHandling(exception -> exception.accessDeniedHandler(this::handleAccessDenied));
         return http.build();
     }
 
+
     @Bean
     public JwtDecoder jwtDecoder() {
-        // Decode the secret key
         byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         SecretKey key = new SecretKeySpec(keyBytes, "HMACSHA512");
 
@@ -56,5 +57,36 @@ public class SecurityConfig
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key).build();
         decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
         return decoder;
+    }
+
+    private void sendErrorResponse(HttpServletRequest request, HttpServletResponse response
+            , HttpStatus status, String message) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+
+        Map<String, String> errorDetails = new LinkedHashMap<>();
+        String token =   request.getHeader("Authorization");
+        if(token != null ) {
+            String bearerToken =  token.substring(7);
+            errorDetails.put("bearer_token",bearerToken);
+        }
+        errorDetails.put("message", message);
+        errorDetails.put("status", status.name());
+        errorDetails.put("errorCode", String.valueOf(status.value()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(errorDetails);
+        response.getWriter().write(json);
+        response.getWriter().flush();
+    }
+
+    private void handleAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+             AuthenticationException message) throws IOException {
+        sendErrorResponse(request,response,HttpStatus.UNAUTHORIZED,"UNAUTHORIZED: You have not authorize to access this resource");
+    }
+
+    private void handleAccessDenied(HttpServletRequest request, HttpServletResponse response,
+             AccessDeniedException message) throws IOException {
+        sendErrorResponse(request,response,HttpStatus.FORBIDDEN, "ACCESS DENIED: You do not have permission to access this resource");
     }
 }

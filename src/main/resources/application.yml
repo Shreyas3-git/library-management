@@ -23,13 +23,13 @@ spring:
 security:
   jwt:
     secret: ${JWT_TOKEN}
-    issuer-uri: "http://localhost:9091/oauth/token" # Replace with your actual issuer URI
+    issuer-uri: "http://localhost:9091/oauth/token"
 
 logging:
   level:
     org:
       springframework:
-        security: DEBUG
+        security: TRACE
     com:
       example:
         practiceproject:
