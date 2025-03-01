@@ -59,13 +59,6 @@ public class NotificationService
     @Autowired
     private AttemptsRepository attemptsRepository;
 
-
-    @PostConstruct
-    public void logTwilioConfig() {
-        System.out.println("Twilio Account SID: " + accountSid);
-        System.out.println("Twilio Service SID: " + serviceSid);
-        System.out.println("Twilio Auth Token: " + authToken);
-    }
     public ResponseEntity<CommonResponse> sendOtp(SendOtpRequest request) {
         try {
             String phoneNum = formatToE164(request.getPhoneNumber());
