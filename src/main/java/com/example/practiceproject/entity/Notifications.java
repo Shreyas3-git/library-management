@@ -23,7 +23,7 @@ public class Notifications
     private Long notificationId;
 
     @Column(name = "is_verified", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private boolean isRead;
+    private boolean isVerified;
 
     @Column(name = "created_at", columnDefinition = "DATETIME")
     private LocalDateTime createdAt;
@@ -49,5 +49,4 @@ public class Notifications
 
     @OneToMany(mappedBy = "notifications",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Attempts> sendCodeAttempts;
-
 }

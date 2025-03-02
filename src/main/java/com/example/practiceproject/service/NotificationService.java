@@ -99,7 +99,8 @@ public class NotificationService
                             .status("SUCCESS")
                             .rrn(rrn)
                             .timestamp(LocalDateTime.now())
-                            .errorCode("200").build();
+                            .errorCode("200")
+                            .sid(otpResponse.getSid()).build();
                     return new ResponseEntity<>(resp, HttpStatus.OK);
                 }).orElseGet(() -> {
                     CommonResponse resp = CommonResponse.builder().message("Failed to send OTP")
@@ -143,8 +144,8 @@ public class NotificationService
     public ResponseEntity<CommonResponse> verifyOtp(VerifyOtpRequest request) {
         try {
             return userRepository.findByRrn(request.getRrn()).map(user -> {
-                return notificationsRepository.findByReferenceNumber(request.getSid())
-                    .map(notify -> {
+                return notificationsRepository.findTopByReferenceNumberOrderByNotificationIdDesc(request.getSid())
+                    .map(notifications -> {
                         String phoneNum = DatabaseEncryptionUtils.decrypt(user.getContact());
                         Map<String,String> hMap = new HashMap<>();
                         hMap.put("Content-Type","application/x-www-form-urlencoded");
@@ -154,14 +155,26 @@ public class NotificationService
                         String encodedOtp = URLEncoder.encode(request.getOtp(),StandardCharsets.UTF_8);
                         String requestBody = "Code=" + encodedOtp + "&To=" + encodedPhoneNum;
                         log.info(String.format("VerifyOtp Request : %s and Request Header : %s",requestBody,hMap));
-                        String verifyOtpResp = notificationClient.verifyOtp(serviceSid,hMap,requestBody);
+                        ResponseEntity<String> verifyOtpResp = notificationClient.verifyOtp(serviceSid,hMap,requestBody);
                         log.info(String.format("VerifyOtp Response : %s => ",verifyOtpResp));
-                        VerifyOtpResponse verifyOtpResponse = new Gson().fromJson(verifyOtpResp,VerifyOtpResponse.class);
-                        CommonResponse resp = CommonResponse.builder().message("Otp Verified Successfully")
-                            .status("SUCCESS")
-                            .timestamp(LocalDateTime.now())
-                            .errorCode("200").build();
-                        return new ResponseEntity<>(resp, HttpStatus.OK);
+                        VerifyOtpResponse verifyOtpResponse = new Gson().fromJson(verifyOtpResp.getBody(),VerifyOtpResponse.class);
+                        if(verifyOtpResp.getStatusCode().is2xxSuccessful()) {
+                            notifications.setUpdatedAt(LocalDateTime.now());
+                            notifications.setStatus("completed");
+                            notifications.setVerified(true);
+                            notificationsRepository.save(notifications);
+                            CommonResponse resp = CommonResponse.builder().message("Otp Verified Successfully")
+                                    .status("SUCCESS")
+                                    .timestamp(LocalDateTime.now())
+                                    .errorCode("200").build();
+                            return new ResponseEntity<>(resp, HttpStatus.OK);
+                        } else {
+                            CommonResponse resp = CommonResponse.builder().message("Failed to Verify Otp")
+                                    .status("FAILED")
+                                    .timestamp(LocalDateTime.now())
+                                    .errorCode("400").build();
+                            return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
+                        }
                     }).orElseGet(() -> {
                         CommonResponse resp = CommonResponse.builder().message("Please Enter Valid Sid")
                             .status("FAILED")
@@ -184,7 +197,7 @@ public class NotificationService
                 .errorCode("400").build();
             return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
         } catch ( RuntimeException e) {
-            log.error(String.format("Unable send otp at this movement : %s",e));
+            log.error(String.format("Unable send otp at this movement : %s",e.getLocalizedMessage()));
             CommonResponse resp = CommonResponse.builder().message("Unable send otp at this movement, Please try after sometime")
                 .status("FAILED")
                 .timestamp(LocalDateTime.now())

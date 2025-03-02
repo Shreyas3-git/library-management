@@ -14,7 +14,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CommonResponse
 {
@@ -23,4 +23,5 @@ public class CommonResponse
     private String status;
     private LocalDateTime timestamp;
     private String rrn;
+    private String sid;
 }
