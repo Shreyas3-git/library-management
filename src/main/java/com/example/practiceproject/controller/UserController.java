@@ -33,7 +33,7 @@ public class UserController
     }
 
     @PostMapping("${app.user.sendOtp}")
-    public ResponseEntity<CommonResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+    public ResponseEntity<CommonResponse> sendOtp(@RequestHeader("Authorization") String token, @Valid @RequestBody SendOtpRequest request) {
         return notificationService.sendOtp(request);
     }
 
