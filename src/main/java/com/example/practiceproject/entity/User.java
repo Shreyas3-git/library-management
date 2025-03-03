@@ -35,7 +35,7 @@ public class User
     @Column(name = "pin_code",columnDefinition = "INT")
     private int pinCode;
 
-    @OneToMany(mappedBy = "issuedTo", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "issuedTo", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Book> books;
 
     @OneToOne(mappedBy = "user" , cascade = CascadeType.ALL)

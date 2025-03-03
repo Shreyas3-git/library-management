@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "library_card")
@@ -31,4 +32,10 @@ public class LibraryCard
     @JoinColumn(name = "user_id")
     private User user;
     private String address;
+
+    @Column(name = "book_return_date",columnDefinition = "date")
+    private LocalDate bookReturnDate;
+
+    @OneToMany(mappedBy = "libraryCard",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private List<Book> books;
 }
