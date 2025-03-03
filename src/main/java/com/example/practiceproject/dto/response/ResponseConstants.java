@@ -26,6 +26,14 @@ public class ResponseConstants
         public static final String ERROR_MESSAGE_VERIFYOTP = "Unable to verify otp at this movement, Please try after sometime";
     }
 
+    public static class BookResponse {
+        public static String SUCCESS_BOOK_MESSAGE = "Book Created Successfully";
 
+        public static String FAILED_BOOK_MESSAGE = "Book Not Found";
+
+        public static String FAILED_DUETO_LIBRARY_CARD = "Library card not found for user";
+
+        public static String SUCCESS_BOOK_ISSUE = "Book Issued Successfully";
+    }
 
 }

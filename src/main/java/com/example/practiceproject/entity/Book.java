@@ -36,4 +36,11 @@ public class Book
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User issuedTo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_card_id",nullable = false)
+    private LibraryCard libraryCard;
+
+    private int quantity;
+
 }
