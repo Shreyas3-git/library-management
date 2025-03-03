@@ -10,8 +10,7 @@ import org.springframework.security.config.annotation.web.oauth2.resourceserver.
 @SpringBootApplication
 @EnableConfigurationProperties(EncryptionConfig.class)
 @EnableFeignClients
-@OAuth2ResourceServerSecurityMarker
-//@SecurityMarker
+//@OAuth2ResourceServerSecurityMarker
 public class PracticeprojectApplication {
 
 	public static void main(String[] args) {

@@ -31,7 +31,6 @@ public class UserService
     private LibraryCardRepository libraryCardRepository;
 
     public ResponseEntity<CommonResponse> createUser(UserRequest request) throws Exception {
-//        String rrn = UUID.randomUUID().toString() + "-" + System.currentTimeMillis();
         try {
             log.info(String.format("Create User Request Body %s",request.toString()));
             byte[] encryptedEmail = DatabaseEncryptionUtils.encrypt(request.getEmail());
@@ -75,7 +74,7 @@ public class UserService
                     .build(), HttpStatus.BAD_REQUEST);
             });
         } catch (Exception e) {
-            log.error(String.format("Error while registration of User with rrrn: %s",e.getLocalizedMessage()));
+            log.error(String.format("Error while registration of User with rrn: %s",e.getLocalizedMessage()));
             return new ResponseEntity<>(CommonResponse.builder()
                 .message("User registration Failed")
                 .status("ERROR")
