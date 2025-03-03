@@ -3,6 +3,9 @@ package com.example.practiceproject.service;
 import com.example.practiceproject.dto.request.SendOtpRequest;
 import com.example.practiceproject.dto.request.VerifyOtpRequest;
 import com.example.practiceproject.dto.response.CommonResponse;
+import com.example.practiceproject.dto.response.ErrorCode;
+import com.example.practiceproject.dto.response.ResponseConstants;
+import com.example.practiceproject.dto.response.Status;
 import com.example.practiceproject.entity.Attempts;
 import com.example.practiceproject.entity.Notifications;
 import com.example.practiceproject.entity.User;
@@ -15,14 +18,12 @@ import com.example.practiceproject.repository.UserRepository;
 import com.example.practiceproject.utils.DatabaseEncryptionUtils;
 import com.google.gson.Gson;
 import feign.FeignException;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import javax.crypto.BadPaddingException;
@@ -95,34 +96,34 @@ public class NotificationService
                     notifications.setSendCodeAttempts(Collections.singletonList(attempts)); // ***CRITICAL: Set the attempts for the notification***
                     notificationsRepository.save(notifications);
 
-                    CommonResponse resp = CommonResponse.builder().message("OTP sent successfully")
-                            .status("SUCCESS")
-                            .rrn(rrn)
-                            .timestamp(LocalDateTime.now())
-                            .errorCode("200")
-                            .sid(otpResponse.getSid()).build();
+                    CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.SUCCESS_SENDOTP_MESSAGE)
+                        .status(Status.SUCCESS.name())
+                        .rrn(rrn)
+                        .timestamp(LocalDateTime.now())
+                        .errorCode(ErrorCode.OK.name())
+                        .sid(otpResponse.getSid()).build();
                     return new ResponseEntity<>(resp, HttpStatus.OK);
                 }).orElseGet(() -> {
-                    CommonResponse resp = CommonResponse.builder().message("Failed to send OTP")
-                            .status("FAILED")
-                            .timestamp(LocalDateTime.now())
-                            .errorCode("400").build();
+                    CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.FAILED_SENDOTP_MESSAGE)
+                        .status(Status.FAILED.name())
+                        .timestamp(LocalDateTime.now())
+                        .errorCode(ErrorCode.DEPENDENCY_FAILED.name()).build();
                     return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
                 });
         } catch ( FeignException ex ) {
             log.error(String.format("FeignException in Twilio SendOtp : %s",ex));
-            CommonResponse resp = CommonResponse.builder().message("Unable verify otp at this movement, Please try after sometime")
-                    .status("FAILED")
-                    .timestamp(LocalDateTime.now())
-                    .errorCode("400").build();
+            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE)
+                .status(Status.FAILED.name())
+                .timestamp(LocalDateTime.now())
+                .errorCode(ErrorCode.DEPENDENCY_FAILED.name()).build();
             return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
         } catch ( IllegalArgumentException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                 BadPaddingException e) {
             log.error(String.format("Unable to verify otp at this movement : %s",e));
-            CommonResponse resp = CommonResponse.builder().message("Unable send otp at this movement, Please try after sometime")
-                    .status("FAILED")
-                    .timestamp(LocalDateTime.now())
-                    .errorCode("500").build();
+            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE)
+                .status(String.valueOf(Status.FAILED))
+                .timestamp(LocalDateTime.now())
+                .errorCode(ErrorCode.UNEXPECTED_ERROR.name()).build();
             return new ResponseEntity<>(resp, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -163,45 +164,45 @@ public class NotificationService
                             notifications.setStatus("completed");
                             notifications.setVerified(true);
                             notificationsRepository.save(notifications);
-                            CommonResponse resp = CommonResponse.builder().message("Otp Verified Successfully")
-                                    .status("SUCCESS")
-                                    .timestamp(LocalDateTime.now())
-                                    .errorCode("200").build();
+                            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.SUCCESS_VERIFYOTP_MESSAGE)
+                                .status(Status.SUCCESS.name())
+                                .timestamp(LocalDateTime.now())
+                                .errorCode(ErrorCode.OK.name()).build();
                             return new ResponseEntity<>(resp, HttpStatus.OK);
                         } else {
-                            CommonResponse resp = CommonResponse.builder().message("Failed to Verify Otp")
-                                    .status("FAILED")
-                                    .timestamp(LocalDateTime.now())
-                                    .errorCode("400").build();
+                            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.FAILED_VERIFYOTP_MESSAGE)
+                                .status(Status.FAILED.name())
+                                .timestamp(LocalDateTime.now())
+                                .errorCode(ErrorCode.BAD_REQUEST.name()).build();
                             return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
                         }
                     }).orElseGet(() -> {
-                        CommonResponse resp = CommonResponse.builder().message("Please Enter Valid Sid")
-                            .status("FAILED")
+                        CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.RESTRICT_VERIFYOTP_MESSAGE)
+                            .status(Status.FAILED.name())
                             .timestamp(LocalDateTime.now())
-                            .errorCode("400").build();
+                            .errorCode(ErrorCode.BAD_REQUEST.name()).build();
                         return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
                     });
             }).orElseGet(() -> {
-                CommonResponse resp = CommonResponse.builder().message("Please Enter Valid Rrn")
-                    .status("FAILED")
+                CommonResponse resp = CommonResponse.builder().message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
+                    .status(Status.FAILED.name())
                     .timestamp(LocalDateTime.now())
-                    .errorCode("400").build();
+                    .errorCode(ErrorCode.BAD_REQUEST.name()).build();
                 return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
             });
         } catch ( FeignException ex ) {
             log.error(String.format("FeignException in Twilio SendOtp : %s",ex));
-            CommonResponse resp = CommonResponse.builder().message("Unable send otp at this movement, Please try after sometime")
-                .status("FAILED")
+            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE_VERIFYOTP)
+                .status(Status.FAILED.name())
                 .timestamp(LocalDateTime.now())
-                .errorCode("400").build();
+                .errorCode(ErrorCode.DEPENDENCY_FAILED.name()).build();
             return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
         } catch ( RuntimeException e) {
             log.error(String.format("Unable send otp at this movement : %s",e.getLocalizedMessage()));
-            CommonResponse resp = CommonResponse.builder().message("Unable send otp at this movement, Please try after sometime")
-                .status("FAILED")
+            CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE_VERIFYOTP)
+                    .status(Status.FAILED.name())
                 .timestamp(LocalDateTime.now())
-                .errorCode("500").build();
+                .errorCode(ErrorCode.UNEXPECTED_ERROR.name()).build();
             return new ResponseEntity<>(resp, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
