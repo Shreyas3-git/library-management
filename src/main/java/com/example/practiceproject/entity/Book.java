@@ -33,13 +33,13 @@ public class Book
     @Column(name = "issued_date",columnDefinition = "date")
     private LocalDate issuedDate;
 
-    @ManyToOne
+    @ManyToOne(targetEntity = User.class,fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User issuedTo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_card_id",nullable = false)
-    private LibraryCard libraryCard;
+    @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_id")
+    private Library library;
 
     private int quantity;
 

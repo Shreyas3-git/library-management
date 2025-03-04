@@ -13,7 +13,9 @@ public class CreateBookRequest
     @NotNull(message = "Author should not be null")
     @NotBlank(message = "author Should not be blank")
     private String author;
-    private int quantity;
+
+    private Integer quantity;
+
     @NotNull(message = "RRN should not be null")
     @NotBlank(message = "RRN Should not be blank")
     private String rrn;

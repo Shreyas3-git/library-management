@@ -1,10 +1,9 @@
 package com.example.practiceproject.controller;
 
-import com.example.practiceproject.dto.request.SendOtpRequest;
-import com.example.practiceproject.dto.request.UserRequest;
-import com.example.practiceproject.dto.request.VerifyOtpRequest;
+import com.example.practiceproject.dto.request.*;
 import com.example.practiceproject.dto.response.CommonResponse;
 import com.example.practiceproject.model.OtpRequest;
+import com.example.practiceproject.service.BookService;
 import com.example.practiceproject.service.NotificationService;
 import com.example.practiceproject.service.UserService;
 import jakarta.validation.Valid;
@@ -27,7 +26,10 @@ public class UserController
     @Autowired
     private NotificationService notificationService;
 
-    @PostMapping("${app.user.create-endpoint}")
+    @Autowired
+    private BookService bookService;
+
+    @PostMapping("${app.user.create-user}")
     public ResponseEntity<CommonResponse> createUser(@Valid @RequestBody UserRequest request) throws Exception {
         return userService.createUser(request);
     }
@@ -38,9 +40,20 @@ public class UserController
     }
 
     @PostMapping("${app.user.verifyOtp}")
-    public ResponseEntity<CommonResponse> verifyOtp( @RequestBody VerifyOtpRequest request) {
+    public ResponseEntity<CommonResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         return notificationService.verifyOtp(request);
     }
+
+    @PostMapping("${app.user.create-book}")
+    public ResponseEntity<CommonResponse> createBook(@Valid @RequestBody CreateBookRequest request) {
+        return bookService.createBook(request);
+    }
+
+    @PostMapping("${app.user.issue-book}")
+    public ResponseEntity<CommonResponse> issueBook(@Valid @RequestBody IssueBookRequest request) {
+        return bookService.issueBook(request);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)

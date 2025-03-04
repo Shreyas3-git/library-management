@@ -7,10 +7,12 @@ import com.example.practiceproject.dto.response.ErrorCode;
 import com.example.practiceproject.dto.response.ResponseConstants;
 import com.example.practiceproject.dto.response.Status;
 import com.example.practiceproject.entity.Book;
+import com.example.practiceproject.entity.Library;
 import com.example.practiceproject.entity.LibraryCard;
 import com.example.practiceproject.errorhandling.ResourceNotFoundException;
 import com.example.practiceproject.repository.BookRepository;
 import com.example.practiceproject.repository.LibraryCardRepository;
+import com.example.practiceproject.repository.LibraryRepository;
 import com.example.practiceproject.repository.UserRepository;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -20,10 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.lang.module.ResolutionException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 public class BookService
@@ -39,32 +40,50 @@ public class BookService
     @Autowired
     private LibraryCardRepository libraryCardRepository;
 
+    @Autowired
+    private LibraryRepository libraryRepository;
+
+
     public ResponseEntity<CommonResponse> createBook(CreateBookRequest createBook) {
-        log.info(String.format("CreateBook Request => {} ",new Gson().toJson(createBook)));
-        return userRepository.findByRrn(createBook.getRrn())
-            .map(user -> {
-                Book book = Book.builder()
-                    .title(createBook.getTitle())
-                    .author(createBook.getAuthor())
-                    .quantity(createBook.getQuantity())
-                    .isAvailable(true)
-                    .build();
-                bookRepository.save(book);
-                CommonResponse commonResponse = CommonResponse.builder()
-                    .message(ResponseConstants.BookResponse.SUCCESS_BOOK_MESSAGE)
-                    .status(Status.SUCCESS.name())
+        try {
+            log.info(String.format("CreateBook Request => {} ",new Gson().toJson(createBook)));
+            return userRepository.findByRrn(createBook.getRrn())
+                .map(user -> {
+                    Library library = libraryRepository.findByLibraryCode("1266").get();
+                    Book book = Book.builder()
+                        .title(createBook.getTitle())
+                        .author(createBook.getAuthor())
+                        .quantity(createBook.getQuantity())
+                        .isAvailable(true)
+                        .build();
+                    bookRepository.save(book);
+                    List<Book> books = library.getBooks();
+                    books.add(book);
+                    libraryRepository.save(library);
+                    CommonResponse commonResponse = CommonResponse.builder()
+                        .message(ResponseConstants.BookResponse.SUCCESS_BOOK_MESSAGE)
+                        .status(Status.SUCCESS.name())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+                    return new ResponseEntity<>(commonResponse, HttpStatus.OK);
+                })
+                .orElseGet(() -> {
+                    CommonResponse commonResponse = CommonResponse.builder()
+                        .message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
+                        .status(Status.FAILED.name())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+                    return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
+                });
+        } catch (Exception e) {
+            e.printStackTrace();
+            CommonResponse commonResponse = CommonResponse.builder()
+                    .message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
+                    .status(Status.FAILED.name())
                     .timestamp(LocalDateTime.now())
                     .build();
-                return new ResponseEntity<>(commonResponse, HttpStatus.OK);
-        })
-        .orElseGet(() -> {
-            CommonResponse commonResponse = CommonResponse.builder()
-                .message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
-                .status(Status.FAILED.name())
-                .timestamp(LocalDateTime.now())
-                .build();
             return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
-        });
+        }
     }
 
 
@@ -84,9 +103,13 @@ public class BookService
                 book.setIssuedTo(user);
                 book.setIssuedDate(LocalDate.now());
                 book.setAvailable(false);
-                book.setLibraryCard(libraryCard);
+
+                List<Book> books = user.getBooks();
+                books.add(book);
+                user.setBooks(books);
                 bookRepository.save(book);
                 libraryCardRepository.save(libraryCard);
+                userRepository.save(user);
 
                 CommonResponse commonResponse = CommonResponse.builder()
                     .message(ResponseConstants.BookResponse.SUCCESS_BOOK_ISSUE)
@@ -96,19 +119,19 @@ public class BookService
                 return new ResponseEntity<>(commonResponse, HttpStatus.OK);
             } else {
                 CommonResponse commonResponse = CommonResponse.builder()
-                        .message(ResponseConstants.BookResponse.FAILED_BOOK_MESSAGE)
-                        .status(Status.FAILED.name())
-                        .timestamp(LocalDateTime.now())
-                        .build();
+                    .message(ResponseConstants.BookResponse.FAILED_BOOK_MESSAGE)
+                    .status(Status.FAILED.name())
+                    .timestamp(LocalDateTime.now())
+                    .build();
                 return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
             }
 
         }).orElseGet(() -> {
             CommonResponse commonResponse = CommonResponse.builder()
-                    .message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
-                    .status(Status.FAILED.name())
-                    .timestamp(LocalDateTime.now())
-                    .build();
+                .message(ResponseConstants.BookResponse.FAILED_DUETO_LIBRARY_CARD)
+                .status(Status.FAILED.name())
+                .timestamp(LocalDateTime.now())
+                .build();
             return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
         });
     }

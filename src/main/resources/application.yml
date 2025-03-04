@@ -54,6 +54,8 @@ app:
     verifyOtp:
       url: /{serviceSid}/VerificationCheck
   user:
-    create-endpoint: /createUser
+    create-user: /createUser
     sendOtp: /sendOtp
     verifyOtp: /verifyOtp
+    create-book: /addBook
+    issue-book: /issueBook
