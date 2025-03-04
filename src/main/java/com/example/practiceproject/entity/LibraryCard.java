@@ -28,14 +28,16 @@ public class LibraryCard
     private LocalDate issueDate;
     @Column(name = "issue_time",columnDefinition = "TIME")
     private LocalTime issueTime;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY,targetEntity = User.class)
     @JoinColumn(name = "user_id")
     private User user;
+
     private String address;
 
     @Column(name = "book_return_date",columnDefinition = "date")
     private LocalDate bookReturnDate;
 
-    @OneToMany(mappedBy = "libraryCard",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Book> books;
+    @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_id")
+    private Library library;
 }

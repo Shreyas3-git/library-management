@@ -53,6 +53,12 @@ public class User
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Notifications> notifications;
+
+    @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
+    @JoinColumn(name = "library_id")
+    private Library library;
+
+
     public void setPassword(String password) {
         this.password = BCrypt.hashpw(password, BCrypt.gensalt());
     }

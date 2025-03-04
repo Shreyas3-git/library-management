@@ -34,7 +34,7 @@ public class Notifications
     @Column(name = "verification_sid", columnDefinition = "VARCHAR(50)")
     private String referenceNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY,targetEntity = User.class)
     @JoinColumn(name = "user_id",nullable = false)
     private User user;
 
