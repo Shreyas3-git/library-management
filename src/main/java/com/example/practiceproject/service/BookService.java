@@ -15,6 +15,7 @@ import com.example.practiceproject.repository.LibraryCardRepository;
 import com.example.practiceproject.repository.LibraryRepository;
 import com.example.practiceproject.repository.UserRepository;
 import com.google.gson.Gson;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
+@Transactional
 public class BookService
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -49,16 +52,23 @@ public class BookService
             log.info(String.format("CreateBook Request => {} ",new Gson().toJson(createBook)));
             return userRepository.findByRrn(createBook.getRrn())
                 .map(user -> {
-                    Library library = libraryRepository.findByLibraryCode("1266").get();
+                    Library library = libraryRepository.findByLibraryCode("1266")
+                            .orElseThrow(() -> new RuntimeException("Library not found"));
                     Book book = Book.builder()
                         .title(createBook.getTitle())
                         .author(createBook.getAuthor())
                         .quantity(createBook.getQuantity())
                         .isAvailable(true)
+                        .library(library)
                         .build();
                     bookRepository.save(book);
-                    List<Book> books = library.getBooks();
-                    books.add(book);
+                    Set<Book> books = library.getBooks();
+                    if(books.isEmpty() ) {
+                        books.add(book);
+                        library.setBooks(books);
+                    } else if(!books.contains(book))
+                        library.getBooks().add(book);
+
                     libraryRepository.save(library);
                     CommonResponse commonResponse = CommonResponse.builder()
                         .message(ResponseConstants.BookResponse.SUCCESS_BOOK_MESSAGE)
@@ -102,11 +112,16 @@ public class BookService
                 book.setQuantity(book.getQuantity()-1);
                 book.setIssuedTo(user);
                 book.setIssuedDate(LocalDate.now());
-                book.setAvailable(false);
+                if(book.getQuantity() == 0)
+                    book.setAvailable(false);
 
-                List<Book> books = user.getBooks();
-                books.add(book);
-                user.setBooks(books);
+                Set<Book> books = user.getBooks();
+                if(books.isEmpty() ) {
+                    books.add(book);
+                    user.setBooks(books);
+                } else if(!books.contains(book))
+                    user.getBooks().add(book);
+
                 bookRepository.save(book);
                 libraryCardRepository.save(libraryCard);
                 userRepository.save(user);
@@ -136,4 +151,8 @@ public class BookService
         });
     }
 
+    private boolean isBookExists(List<Book> books,Book book) {
+
+        return false;
+    }
 }

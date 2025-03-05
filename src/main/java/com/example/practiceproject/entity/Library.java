@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -23,11 +25,29 @@ public class Library
     private String libraryCode;
 
     @OneToMany(mappedBy = "library",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Book> books;
+    @Builder.Default
+    private Set<Book> books = new HashSet<>();
 
     @OneToMany(mappedBy = "library",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<LibraryCard> libraryCards;
+    @Builder.Default
+    private Set<LibraryCard> libraryCards = new HashSet<>();
 
     @OneToMany(mappedBy = "library",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<User> usersInfo;
+    @Builder.Default
+    private Set<User> usersInfo = new HashSet<>();
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Library library = (Library) o;
+        return id != null && id.equals(library.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return (id != null) ? id.hashCode() : super.hashCode();
+    }
+
 }

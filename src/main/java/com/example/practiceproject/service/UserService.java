@@ -2,6 +2,9 @@ package com.example.practiceproject.service;
 
 import com.example.practiceproject.dto.request.UserRequest;
 import com.example.practiceproject.dto.response.CommonResponse;
+import com.example.practiceproject.dto.response.ErrorCode;
+import com.example.practiceproject.dto.response.ResponseConstants;
+import com.example.practiceproject.dto.response.Status;
 import com.example.practiceproject.entity.Library;
 import com.example.practiceproject.entity.LibraryCard;
 import com.example.practiceproject.entity.User;
@@ -20,7 +23,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -41,58 +46,54 @@ public class UserService
             log.info(String.format("Create User Request Body %s",request.toString()));
             byte[] encryptedEmail = DatabaseEncryptionUtils.encrypt(request.getEmail());
             byte[] encryptedContact = DatabaseEncryptionUtils.encrypt(request.getContact());
+            Library library = libraryRepository.findByLibraryCode("1266")
+                    .orElseThrow(() -> new RuntimeException("Library not found"));
             return userRepository.findByRrn(request.getRrn()).map(userInfo -> {
                 return userRepository.findByEmailAndContact(encryptedEmail,encryptedContact)
                     .map(existingUser -> {
-                        userRepository.deleteById(1202l);
                         return new ResponseEntity<>(CommonResponse.builder().rrn(existingUser.getRrn())
-                                .message("User Already Exists").errorCode("E00")
-                                .status("Failed").build(), HttpStatus.CONFLICT);
+                                .message(ResponseConstants.CONFLICT_MESSAGE).errorCode(ErrorCode.CONFLICT.name())
+                                .status(Status.FAILED.name()).build(), HttpStatus.CONFLICT);
                     }).orElseGet(() -> {
                         userInfo.setName(request.getName());
-                        userInfo.setBooks(new ArrayList<>());
                         userInfo.setEmail(encryptedEmail);
                         userInfo.setAddress(request.getAddress());
                         userInfo.setPinCode(Integer.parseInt(request.getPinCode()));
                         userInfo.setPassword(request.getPassword());
                         userInfo.setCreatedAt(LocalDateTime.now());
                         userInfo.setUpdatedAt(LocalDateTime.now());
-                        LibraryCard libraryCard = LibraryCard.builder()
-                            .address(getAddress(request))
-                            .cardNumber(getCardNumber(userInfo.getRrn()))
-                            .issueDate(LocalDate.now())
-                            .issueTime(LocalTime.now())
-                            .user(userInfo)
-                            .build();
-                        userInfo.setLibraryCard(libraryCard);
-                        libraryCardRepository.save(libraryCard);
+
+                        LibraryCard libraryCard = userInfo.getLibraryCard();
+                        assignLibraryCardToUser(libraryCard,request,userInfo);
                         userRepository.save(userInfo);
-                        Library library = libraryRepository.findByLibraryCode("1266").get();
-                        List<User> user = library.getUsersInfo();
-                        List<LibraryCard> libraryCards = library.getLibraryCards();
-                        user.add(userInfo);
-                        libraryCards.add(libraryCard);
+
+                        Set<User> users = library.getUsersInfo();
+                        Set<LibraryCard> libraryCards = library.getLibraryCards();
+                        assignUserToLibrary(users,userInfo,library);
+                        assignLibraryCardToLibrary(libraryCards,library,libraryCard);
+
                         libraryRepository.save(library);
 
                         return new ResponseEntity<>(CommonResponse.builder()
-                        .message("User registration successful")
-                        .status("SUCCESS")
-                        .errorCode("200")
+                        .message(ResponseConstants.SUCCESS_MESSAGE)
+                        .status(Status.SUCCESS.name())
+                        .errorCode(ErrorCode.OK.name())
                         .build(), HttpStatus.CREATED);
                     });
             }).orElseGet(() -> {
                 return new ResponseEntity<>(CommonResponse.builder()
-                    .message("Invalid Request Reference Number")
-                    .status("FAILED")
-                    .errorCode("E400")
+                    .message(ResponseConstants.RESTRICT_COMMON_MESSAGE)
+                    .status(Status.FAILED.name())
+                    .errorCode(ErrorCode.BAD_REQUEST.name())
                     .build(), HttpStatus.BAD_REQUEST);
             });
         } catch (Exception e) {
-            log.error(String.format("Error while registration of User with rrn: %s",e.getLocalizedMessage()));
+            e.printStackTrace();
+            log.error(String.format("Error while registration of User : %s",e.getLocalizedMessage()));
             return new ResponseEntity<>(CommonResponse.builder()
-                .message("User registration Failed")
-                .status("ERROR")
-                .errorCode("E500")
+                .message(ResponseConstants.FAILED_REGISTRATION_MESSAGE)
+                .status(Status.FAILED.name())
+                .errorCode(ErrorCode.UNEXPECTED_ERROR.name())
                 .build(), HttpStatus.OK);
         }
     }
@@ -131,4 +132,41 @@ public class UserService
         return null;
     }
 
+
+    private void assignUserToLibrary(Set<User> users, User userInfo,
+                            Library library) {
+        if (users.isEmpty() ) {
+            users.add(userInfo);
+            library.setUsersInfo(users);
+        } else if(!users.contains(userInfo)) {
+            library.getUsersInfo().add(userInfo);
+        }
+    }
+
+
+    private void assignLibraryCardToLibrary(Set<LibraryCard> libraryCards, Library library,
+                                   LibraryCard libraryCard) {
+        if (libraryCards.isEmpty()) {
+            libraryCards.add(libraryCard);
+            library.setLibraryCards(libraryCards);
+        } else if(libraryCards.contains(libraryCard)) {
+            library.getLibraryCards().add(libraryCard);
+        }
+    }
+
+    private void assignLibraryCardToUser(LibraryCard libraryCard, UserRequest request ,
+                                         User userInfo) {
+        if (libraryCard == null) {
+            libraryCard = LibraryCard.builder()
+                    .address(getAddress(request))
+                    .cardNumber(getCardNumber(userInfo.getRrn()))
+                    .issueDate(LocalDate.now())
+                    .issueTime(LocalTime.now())
+                    .user(userInfo)
+                    .build();
+            userInfo.setLibraryCard(libraryCard);
+            libraryCardRepository.save(libraryCard);
+        }
+
+    }
 }

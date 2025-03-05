@@ -6,7 +6,11 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
 import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 @Entity
@@ -36,7 +40,8 @@ public class User
     private int pinCode;
 
     @OneToMany(mappedBy = "issuedTo", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Book> books;
+    @Builder.Default
+    private Set<Book> books = new HashSet<>();
 
     @OneToOne(mappedBy = "user" , cascade = CascadeType.ALL)
     private LibraryCard libraryCard;
@@ -52,7 +57,8 @@ public class User
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Notifications> notifications;
+    @Builder.Default
+    private Set<Notifications> notifications = new HashSet<>();
 
     @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id")
@@ -61,5 +67,18 @@ public class User
 
     public void setPassword(String password) {
         this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return (id != null) ? id.hashCode() : super.hashCode();
     }
 }
