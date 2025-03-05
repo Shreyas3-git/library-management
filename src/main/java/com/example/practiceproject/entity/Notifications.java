@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "notifications")
@@ -48,5 +50,6 @@ public class Notifications
     private String status;
 
     @OneToMany(mappedBy = "notifications",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private List<Attempts> sendCodeAttempts;
+    @Builder.Default
+    private Set<Attempts> sendCodeAttempts = new HashSet<>();
 }

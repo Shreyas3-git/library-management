@@ -40,4 +40,19 @@ public class LibraryCard
     @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id")
     private Library library;
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LibraryCard libraryCard = (LibraryCard) o;
+        return id != null && id.equals(libraryCard.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return (id != null) ? id.hashCode() : super.hashCode();
+    }
+
 }

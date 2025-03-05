@@ -87,14 +87,16 @@ public class NotificationService
                         .status(otpResponse.getStatus())
                         .createdAt(LocalDateTime.now())
                         .user(user).build();
+                    notificationsRepository.save(notifications);
 
                     Attempts attempts = Attempts.builder().attemptsSid(otpResponse.getSid())
                         .notifications(notifications)
                         .channel(otpResponse.getChannel())
                         .sentTime(LocalDateTime.now()).build();
 
-                    notifications.setSendCodeAttempts(Collections.singletonList(attempts)); // ***CRITICAL: Set the attempts for the notification***
-                    notificationsRepository.save(notifications);
+                    attemptsRepository.save(attempts);
+
+                    notifications.getSendCodeAttempts().add(attempts);
 
                     CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.SUCCESS_SENDOTP_MESSAGE)
                         .status(Status.SUCCESS.name())
@@ -111,6 +113,7 @@ public class NotificationService
                     return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
                 });
         } catch ( FeignException ex ) {
+            ex.printStackTrace();
             log.error(String.format("FeignException in Twilio SendOtp : %s",ex));
             CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE)
                 .status(Status.FAILED.name())
@@ -119,6 +122,7 @@ public class NotificationService
             return new ResponseEntity<>(resp, HttpStatus.FAILED_DEPENDENCY);
         } catch ( IllegalArgumentException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                 BadPaddingException e) {
+            e.printStackTrace();
             log.error(String.format("Unable to verify otp at this movement : %s",e));
             CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE)
                 .status(String.valueOf(Status.FAILED))
