@@ -56,7 +56,7 @@ jobs:
     - name: MAVEN_BUILD
       run: mvn -B package --file pom.xml
       env:
-        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/library_management
+        SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/library_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
         SPRING_DATASOURCE_USERNAME: root
         SPRING_DATASOURCE_PASSWORD: root
 
