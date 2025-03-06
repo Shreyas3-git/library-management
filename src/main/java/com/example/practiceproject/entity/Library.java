@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -42,12 +43,11 @@ public class Library
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Library library = (Library) o;
-        return id != null && id.equals(library.id);
+        return Objects.equals(id, library.id);
     }
 
     @Override
     public int hashCode() {
-        return (id != null) ? id.hashCode() : super.hashCode();
+        return Objects.hash(id);
     }
-
 }

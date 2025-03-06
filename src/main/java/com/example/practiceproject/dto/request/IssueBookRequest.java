@@ -14,7 +14,7 @@ public class IssueBookRequest
     @NotBlank(message = "author should not be blank")
     private String author;
     @NotNull(message = "userId should not be null")
-    @NotBlank(message = "userId should not be blank")
+//    @NotBlank(message = "userId should not be blank")
     private Long userId;
     @NotNull(message = "rrn should not be null")
     @NotBlank(message = "rrn should not be blank")

@@ -74,11 +74,11 @@ public class User
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id != null && id.equals(user.id);
+        return Objects.equals(id, user.id);
     }
 
     @Override
     public int hashCode() {
-        return (id != null) ? id.hashCode() : super.hashCode();
+        return Objects.hash(id);
     }
 }

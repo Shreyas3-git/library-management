@@ -62,9 +62,10 @@ public class UserService
                         userInfo.setPassword(request.getPassword());
                         userInfo.setCreatedAt(LocalDateTime.now());
                         userInfo.setUpdatedAt(LocalDateTime.now());
+                        userInfo.setLibrary(library);
 
                         LibraryCard libraryCard = userInfo.getLibraryCard();
-                        assignLibraryCardToUser(libraryCard,request,userInfo);
+                        assignLibraryCardToUser(libraryCard,request,userInfo,library);
                         userRepository.save(userInfo);
 
                         Set<User> users = library.getUsersInfo();
@@ -155,7 +156,7 @@ public class UserService
     }
 
     private void assignLibraryCardToUser(LibraryCard libraryCard, UserRequest request ,
-                                         User userInfo) {
+                                         User userInfo, Library library) {
         if (libraryCard == null) {
             libraryCard = LibraryCard.builder()
                     .address(getAddress(request))
@@ -163,6 +164,7 @@ public class UserService
                     .issueDate(LocalDate.now())
                     .issueTime(LocalTime.now())
                     .user(userInfo)
+                    .library(library)
                     .build();
             userInfo.setLibraryCard(libraryCard);
             libraryCardRepository.save(libraryCard);

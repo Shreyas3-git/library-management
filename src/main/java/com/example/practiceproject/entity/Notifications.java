@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -52,4 +53,20 @@ public class Notifications
     @OneToMany(mappedBy = "notifications",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Attempts> sendCodeAttempts = new HashSet<>();
+
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(notificationId, referenceNumber, phoneNumber, status, createdAt, user);
+        // Exclude sendCodeAttempts
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Notifications other = (Notifications) obj;
+        return Objects.equals(notificationId, other.notificationId);
+    }
 }

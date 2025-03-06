@@ -60,11 +60,11 @@ public class BookService
                         .quantity(createBook.getQuantity())
                         .isAvailable(true)
                         .library(library)
+
                         .build();
                     bookRepository.save(book);
                     Set<Book> books = library.getBooks();
-                    if(books.isEmpty() ) {
-                        books.add(book);
+                    if(books.isEmpty() ) {books.add(book);
                         library.setBooks(books);
                     } else if(!books.contains(book))
                         library.getBooks().add(book);

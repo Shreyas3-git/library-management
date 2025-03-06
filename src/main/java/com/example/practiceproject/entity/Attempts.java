@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "attempts")
@@ -33,4 +34,18 @@ public class Attempts
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id",nullable = false)
     private Notifications notifications;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(attemptsId, attemptsSid, channel, sentTime);
+        // Exclude notifications
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Attempts other = (Attempts) obj;
+        return Objects.equals(attemptsId, other.attemptsId);
+    }
 }
