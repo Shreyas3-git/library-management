@@ -24,7 +24,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: library_management
-          MYSQL_USER: root
           MYSQL_PASSWORD: root
           MYSQL_ROOT_HOST: '%' # Allows root access from any host
         ports:
