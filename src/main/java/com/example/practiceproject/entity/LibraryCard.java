@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "library_card")
@@ -47,12 +48,11 @@ public class LibraryCard
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LibraryCard libraryCard = (LibraryCard) o;
-        return id != null && id.equals(libraryCard.id);
+        return Objects.equals(id, libraryCard.id);
     }
 
     @Override
     public int hashCode() {
-        return (id != null) ? id.hashCode() : super.hashCode();
+        return Objects.hash(id);
     }
-
 }
