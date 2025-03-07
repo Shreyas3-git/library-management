@@ -204,7 +204,7 @@ public class NotificationService
         } catch ( RuntimeException e) {
             log.error(String.format("Unable send otp at this movement : %s",e.getLocalizedMessage()));
             CommonResponse resp = CommonResponse.builder().message(ResponseConstants.NotificationResponse.ERROR_MESSAGE_VERIFYOTP)
-                    .status(Status.FAILED.name())
+                .status(Status.FAILED.name())
                 .timestamp(LocalDateTime.now())
                 .errorCode(ErrorCode.UNEXPECTED_ERROR.name()).build();
             return new ResponseEntity<>(resp, HttpStatus.INTERNAL_SERVER_ERROR);
