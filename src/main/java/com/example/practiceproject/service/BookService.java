@@ -2,6 +2,7 @@ package com.example.practiceproject.service;
 
 import com.example.practiceproject.dto.request.CreateBookRequest;
 import com.example.practiceproject.dto.request.IssueBookRequest;
+import com.example.practiceproject.dto.request.ReturnBookRequest;
 import com.example.practiceproject.dto.response.CommonResponse;
 import com.example.practiceproject.dto.response.ErrorCode;
 import com.example.practiceproject.dto.response.ResponseConstants;
@@ -151,8 +152,7 @@ public class BookService
         });
     }
 
-    private boolean isBookExists(List<Book> books,Book book) {
-
-        return false;
+    public ResponseEntity<CommonResponse> returnBook(ReturnBookRequest request) {
+        return new ResponseEntity<>(CommonResponse.builder().build(),HttpStatus.OK);
     }
 }
