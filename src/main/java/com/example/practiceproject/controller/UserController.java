@@ -29,6 +29,8 @@ public class UserController
     @Autowired
     private BookService bookService;
 
+
+
     @PostMapping("${app.user.create-user}")
     public ResponseEntity<CommonResponse> createUser(@Valid @RequestBody UserRequest request) throws Exception {
         return userService.createUser(request);
@@ -54,6 +56,10 @@ public class UserController
         return bookService.issueBook(request);
     }
 
+    @PostMapping("${app.user.return-book}")
+    public ResponseEntity<CommonResponse> returnBook(@Valid @RequestBody ReturnBookRequest request) {
+        return bookService.returnBook(request);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)

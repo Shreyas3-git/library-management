@@ -59,3 +59,4 @@ app:
     verifyOtp: /verifyOtp
     create-book: /addBook
     issue-book: /issueBook
+    return-book: /returnBook
