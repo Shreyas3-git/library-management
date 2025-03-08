@@ -29,13 +29,15 @@ public class ResponseConstants
     public static class BookResponse {
         public static String SUCCESS_BOOK_MESSAGE = "Book Created Successfully";
 
-        public static String FAILED_BOOK_MESSAGE = "Book Not Found";
+        public static String FAILED_BOOK_MESSAGE = "Book Currently Unavailable";
 
         public static String FAILED_DUETO_LIBRARY_CARD = "Library card not found for user";
 
         public static String SUCCESS_BOOK_ISSUE = "Book Issued Successfully";
 
-        public static String FAILED_CREATE_BOOK = "Unable to add book to library";
+        public static String SUCCESS_BOOK_RETURN = "Book return Successfully";
+
+        public static String SESSION_EXPIRED = "Session Expired, Please login again into your account";
     }
 
 }

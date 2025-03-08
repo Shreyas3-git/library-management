@@ -10,6 +10,7 @@ import com.example.practiceproject.dto.response.Status;
 import com.example.practiceproject.entity.Book;
 import com.example.practiceproject.entity.Library;
 import com.example.practiceproject.entity.LibraryCard;
+import com.example.practiceproject.entity.User;
 import com.example.practiceproject.errorhandling.ResourceNotFoundException;
 import com.example.practiceproject.repository.BookRepository;
 import com.example.practiceproject.repository.LibraryCardRepository;
@@ -110,6 +111,7 @@ public class BookService
 
             if(book.getQuantity() > 0) {
                 libraryCard.setBookReturnDate(LocalDate.now().plusDays(14));
+                libraryCard.setBookIssueDate(LocalDate.now());
                 book.setQuantity(book.getQuantity()-1);
                 book.setIssuedTo(user);
                 book.setIssuedDate(LocalDate.now());
@@ -144,7 +146,7 @@ public class BookService
 
         }).orElseGet(() -> {
             CommonResponse commonResponse = CommonResponse.builder()
-                .message(ResponseConstants.BookResponse.FAILED_DUETO_LIBRARY_CARD)
+                .message(ResponseConstants.BookResponse.SESSION_EXPIRED)
                 .status(Status.FAILED.name())
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -153,6 +155,52 @@ public class BookService
     }
 
     public ResponseEntity<CommonResponse> returnBook(ReturnBookRequest request) {
-        return new ResponseEntity<>(CommonResponse.builder().build(),HttpStatus.OK);
+        log.info(String.format("Issue Book Request => {} ",new Gson().toJson(request)) );
+        return userRepository.findByIdAndRrn(request.getUserId(),request.getRrn()).map(user -> {
+            Book book = bookRepository.findTopByTitleAndAuthorOrderByIdAsc(request.getTitle(), request.getAuthor())
+                    .orElseThrow(() -> new ResourceNotFoundException(ResponseConstants.BookResponse.FAILED_BOOK_MESSAGE,
+                            ErrorCode.BAD_REQUEST.name(), Status.FAILED.name(), LocalDateTime.now()));
+            LibraryCard libraryCard = libraryCardRepository.findByUser(user)
+                    .orElseThrow(() -> new ResourceNotFoundException(ResponseConstants.BookResponse.FAILED_DUETO_LIBRARY_CARD,
+                            ErrorCode.BAD_REQUEST.name(), Status.FAILED.name(), LocalDateTime.now()));
+
+            updateBookDetails(user,book);
+            updateLibraryCardDetails(libraryCard);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+            CommonResponse commonResponse = CommonResponse.builder()
+                .message(ResponseConstants.BookResponse.SUCCESS_BOOK_RETURN)
+                .status(Status.SUCCESS.name())
+                .timestamp(LocalDateTime.now())
+                .build();
+            return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
+        }).orElseGet(() -> {
+            CommonResponse commonResponse = CommonResponse.builder()
+                .message(ResponseConstants.BookResponse.SESSION_EXPIRED)
+                .status(Status.FAILED.name())
+                .timestamp(LocalDateTime.now())
+                .build();
+            return new ResponseEntity<>(commonResponse, HttpStatus.BAD_REQUEST);
+        });
+    }
+
+    private void updateBookDetails(User user,Book book) {
+        Set<Book> books = user.getBooks();
+        if(books.contains(book)) {
+            user.getBooks().remove(book);
+            books.remove(book);
+            if(books.size() == 1) {
+                book.setIssuedTo(null);
+                book.setAvailable(true);
+            }
+            book.setQuantity(book.getQuantity()+1);
+            bookRepository.save(book);
+        }
+
+    }
+
+    private void updateLibraryCardDetails(LibraryCard libraryCard) {
+        libraryCard.setBookReturnDate(LocalDate.now());
+        libraryCardRepository.save(libraryCard);
     }
 }

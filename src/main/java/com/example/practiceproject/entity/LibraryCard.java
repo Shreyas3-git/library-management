@@ -32,11 +32,12 @@ public class LibraryCard
     @OneToOne(fetch = FetchType.LAZY,targetEntity = User.class)
     @JoinColumn(name = "user_id")
     private User user;
-
     private String address;
 
     @Column(name = "book_return_date",columnDefinition = "date")
     private LocalDate bookReturnDate;
+    @Column(name = "book_issue_Date",columnDefinition = "DATE")
+    private LocalDate bookIssueDate;
 
     @ManyToOne(targetEntity = Library.class,fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id")
